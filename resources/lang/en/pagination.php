@@ -16,4 +16,6 @@ return [
     'previous' => '&laquo; Previous',
     'next' => 'Next &raquo;',
 
+    'articles' => env('BIKES_PER_PAGE', 8)
+
 ];

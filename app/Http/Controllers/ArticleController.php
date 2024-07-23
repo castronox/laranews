@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Article;
 use Illuminate\Http\Request;
 
 class ArticleController extends Controller
@@ -13,7 +13,12 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        //
+        $articles = Article::orderBy('id','DESC')
+                ->paginate(config('pagination.bikes',10));
+
+        $total = Article::count();
+
+        return view('articles.list', ['articles'=>$articles, 'total'=>$total]);
     }
 
     /**
@@ -23,8 +28,9 @@ class ArticleController extends Controller
      */
     public function create()
     {
-        //
+        return view('articles.create');
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -32,9 +38,26 @@ class ArticleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(Request $request){
+        
+        $request->validate([
+            'id' => 'required|integer',
+            'user_id' => 'required|integer',
+            'titulo' => 'required|string|max:255',
+            'tema' => 'required|string|max:255',
+            'texto' => 'required|string|max:5000',
+            'imagen' => 'nullable|string|max:255',
+            'visitas' => 'required|integer',
+            'published_at' => 'nullable|date',
+            'deleted_at' => 'nullable|date',
+            'created_at' => 'required|date',
+            'updated_at' => 'required|date',
+        ]);
+
+        $article = Article::create($request->all());
+
+        return redirect()->route('articles.show', $article->id)
+            ->with('success', "La noticia $article->titulo se ha añadido correctamente");
     }
 
     /**
@@ -45,7 +68,9 @@ class ArticleController extends Controller
      */
     public function show($id)
     {
-        //
+        $article = Article::findOrFail($id);
+
+        return view('articles.show', ['article'=>$article]);
     }
 
     /**
@@ -56,7 +81,8 @@ class ArticleController extends Controller
      */
     public function edit($id)
     {
-        //
+        $article = Article::findOrFail($id);
+        return view('article.update',['article'=>$article]);
     }
 
     /**
@@ -68,7 +94,28 @@ class ArticleController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'id' => 'required|integer',
+            'user_id' => 'required|integer',
+            'titulo' => 'required|string|max:255',
+            'tema' => 'required|string|max:255',
+            'texto' => 'required|string|max:5000',
+            'imagen' => 'nullable|string|max:255',
+            'visitas' => 'required|integer',
+            'published_at' => 'nullable|date',
+            'updated_at' => 'required|date',
+        ]);
+
+        $article = Article::findOrFail($id);
+        $article->update($request->all()+['matriculada'=>0]);
+
+        return back()->with('success', "La noticia ha sido modificada correctamente");
+    }
+
+
+    public function delete($id){
+        $article = Article::findOrFail($id);
+        return view('articles.delete', ['article' => $article]);
     }
 
     /**
@@ -79,6 +126,11 @@ class ArticleController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $article = Article::findOrFail($id);
+
+        $article->delete();
+
+        return redirect('articles')
+            ->with('success', "La noticia $article->titulo, ha sido eliminada");
     }
 }
