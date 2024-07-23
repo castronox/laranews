@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::resource('articles', ArticleController::class);
 
+Route::get('/articles/search', [ArticleController::class, 'search'])->name('articles.search');
 
 Route::get('articles/{article}/delete', [ArticleController::class, 'delete'])
     ->name('articles.delete');
