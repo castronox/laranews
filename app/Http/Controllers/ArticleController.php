@@ -65,22 +65,19 @@ class ArticleController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request){
-        
+    
         $request->validate([
-            'id' => 'required|integer',
-            'user_id' => 'required|integer',
             'titulo' => 'required|string|max:255',
             'tema' => 'required|string|max:255',
             'texto' => 'required|string|max:5000',
             'imagen' => 'nullable|string|max:255',
-            'visitas' => 'required|integer',
-            'published_at' => 'nullable|date',
-            'deleted_at' => 'nullable|date',
-            'created_at' => 'nullable|date',
-            'updated_at' => 'nullable|date',
         ]);
 
-        $article = Article::create($request->all());
+        $datos = $request->all();
+
+        $datos['user_id'] = $request->user()->id; 
+
+        $article = Article::create($datos);
 
         return redirect()->route('articles.show', $article->id)
             ->with('success', "La noticia $article->titulo se ha añadido correctamente");
