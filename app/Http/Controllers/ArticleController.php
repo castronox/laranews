@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ArticleController extends Controller
 {
@@ -14,7 +15,7 @@ class ArticleController extends Controller
     public function index()
     {
         $articles = Article::orderBy('id','DESC')
-                ->paginate(config('pagination.bikes',10));
+                ->paginate(config('pagination.articles',10));
 
         $total = Article::count();
 
@@ -33,15 +34,15 @@ class ArticleController extends Controller
 
         #Recupera los resultados, se añade titulo y tema al paginador
         #Para que mantenga el filtro al pasar de página
-        $bikes = Article::where('titulo', 'like', "%$titulo%")
+        $articles = Article::where('titulo', 'like', "%$titulo%")
                     ->where('tema', 'like', "%$tema%")
-                    ->paginate(config('paginator.bikes',5))
+                    ->paginate(config('paginator.articles',5))
                     ->appends(['titulo' => $titulo, 'tema' => $tema]);
                     
         
-        return view('bikes.list', [
+        return view('articles.list', [
 
-            'bikes' => $bikes,
+            'articles' => $articles,
             'titulo' => $titulo,  # Para rellenar el input 'titulo'
             'tema' => $tema # Para rellenar 'tema'
         ]);
@@ -66,14 +67,29 @@ class ArticleController extends Controller
      */
     public function store(Request $request){
     
+
         $request->validate([
             'titulo' => 'required|string|max:255',
             'tema' => 'required|string|max:255',
             'texto' => 'required|string|max:5000',
-            'imagen' => 'nullable|string|max:255',
+            'imagen' => 'sometimes|file|image|mimes:jpg,png,gif,webp|max:2048',
         ]);
 
         $datos = $request->all();
+        # El valor por defecto para la imagen será NULL
+        $datos +=['imagen' => NULL];
+
+        
+        # Recuperación de la imagen
+        if($request->hasFile('imagen')){
+                # Sube la imagen al directorio indicado en el fichero de config
+                $ruta = $request->file('imagen')->store('images/articles');
+
+                
+
+                # Nos quedamos solo con el nombre del ficheropara añadirlo a la base de datos
+                $datos['imagen'] = pathinfo($ruta, PATHINFO_BASENAME);
+        }
 
         $datos['user_id'] = $request->user()->id; 
 
@@ -102,10 +118,10 @@ class ArticleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request, Article $article)
     {
-        $article = Article::findOrFail($id);
-        return view('article.update',['article'=>$article]);
+        
+        return view('articles.update',['article'=>$article]);
     }
 
     /**
@@ -115,25 +131,46 @@ class ArticleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Article $article)
     {
-        $request->validate([
-            'id' => 'required|integer',
-            'user_id' => 'required|integer',
-            'titulo' => 'required|string|max:255',
-            'tema' => 'required|string|max:255',
-            'texto' => 'required|string|max:5000',
-            'imagen' => 'nullable|string|max:255',
-            'visitas' => 'nullable|integer',
-            'published_at' => 'nullable|date',
-            'updated_at' => 'nullable|date',
-        ]);
+        $datos = $request->only('titulo', 'tema' , 'texto');
+        
 
-        $article = Article::findOrFail($id);
-        $article->update($request->all()+['matriculada'=>0]);
 
-        return back()->with('success', "La noticia ha sido modificada correctamente");
+        if($request->hasFile('imagen')){
+            # Marcamos la imagen antigua para ser borrada si el update va bien
+            if($article->imagen)
+                $aBorrar = config('filesystems.articlesImageDir') . $article->imagen;
+
+            # Sube la imagen al directorio indicado en el fichero de config
+            
+            $imagenNueva = $request->file('imagen')->store(config('filesystems.articlesImageDir'));
+
+            # Nos quedamos solo con el nombre de fichero para añadirlo a la BBDD
+            $datos['imagen'] = pathinfo($imagenNueva, PATHINFO_BASENAME);
+
+        }
+
+        # En caso de que nos pidan eliminar la imagen
+        if($request->filled('eliminarimagen') && $article->imagen){
+            $datos['imagen'] = NULL;
+            $aBorrar = config('filesystems.articlesImageDir') . '/' . $article->imagen;
+        }
+
+        # Al actualizar debemos tener en cuenta varias cosas:
+        if($article->update($datos)){
+            if(isset($aBorrar))
+                Storage::delete($aBorrar);  # Borramos foto antigua
+        }else{ # Si algo falla
+            if(isset($imagenNueva))
+                Storage::delete($imagenNueva); # Borramos la foto nueva    
+        }
+
+        # Carga la misma vista y muestra el mensaje de éxito
+        return back()->with('success', "Noticia $article->titulo $article->modelo actualizada satisfactoriamente");
     }
+
+    
 
 
     public function delete($id){
