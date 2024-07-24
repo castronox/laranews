@@ -8,7 +8,7 @@
     <div class="row mb-3">
         <div class="col-sm text-start">{{ $articles->links() }}</div>
         <div class="col-sm text-end">
-            <p>Nueva moto <a href="{{ route('articles.create') }}" class="btn btn-success ml-2">+</a></p>
+            <p>Nuevo artículo <a href="{{ route('articles.create') }}" class="btn btn-success ml-2">+</a></p>
         </div>
     </div>
 
@@ -31,11 +31,11 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Foto</th>
+                {{-- <th>Foto</th> --}}
                 <th>Título</th>
                 <th>Tema</th>
                 <th>Visitas</th>
-                <th>Color</th>
+               
                 <th>Operaciones</th>
             </tr>
         </thead>
@@ -43,16 +43,16 @@
             @foreach ($articles as $article)
                 <tr>
                     <td>{{ $article->id }}</td>
-                    <td class="text-center">
+                    {{-- <td class="text-center">
                         <img class="rounded" style="max-width: 90px" 
                             src="{{ $article->imagen ? asset('storage/' . config('filesystems.articlesImageDir') . '/' . $article->imagen) : asset('storage/' . config('filesystems.articlesImageDir') . '/default.png') }}" 
                             alt="Imagen de {{ $article->titulo }} {{ $article->tema }}" 
                             title="Imagen de {{ $article->titulo }} {{ $article->tema }}">
-                    </td>
+                    </td> --}}
                     <td>{{ $article->titulo }}</td>
                     <td>{{ $article->tema }}</td>
                     <td>{{ $article->visitas }}</td>
-                    <td style="background-color: {{ $article->color }}">{{ $article->color }}</td>
+                    
                     <td class="text-center">
                         <a href="{{ route('articles.show', $article->id) }}" class="btn btn-info btn-sm">
                             <img height="20" width="20" src="{{ asset('images/buttons/show.png') }}" alt="Ver detalles" title="Ver detalles">
@@ -90,7 +90,7 @@
         }, 2000);
     </script>
 
-    <p>Estas son algunas de nuestros articulos: <span id="info"></span></p>
+    <p>Estas son algunas de nuestros noticias: <span id="info"></span></p>
 @endsection
 
 @section('enlaces')
