@@ -38,6 +38,12 @@
 
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{route('home')}}" >
+                                
+                                {{ Auth::user() ? Auth::user()->name : '' }} {{ Auth::user() ? Auth::user()->email : '' }}
+                            </a>
+                        </li>
                         <!-- Authentication Links -->
                         @guest
                             @if (Route::has('login'))

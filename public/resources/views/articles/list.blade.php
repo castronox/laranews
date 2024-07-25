@@ -7,9 +7,13 @@
 @section('contenido')
     <div class="row mb-3">
         <div class="col-sm text-start">{{ $articles->links() }}</div>
+        @auth
+            
         <div class="col-sm text-end">
             <p>Nuevo artículo <a href="{{ route('articles.create') }}" class="btn btn-success ml-2">+</a></p>
         </div>
+        
+        @endauth
     </div>
 
     <form method="GET" class="row g-3" action="{{ route('articles.search') }}">
@@ -35,7 +39,7 @@
                 <th>Título</th>
                 <th>Tema</th>
                 <th>Visitas</th>
-               
+
                 <th>Operaciones</th>
             </tr>
         </thead>
@@ -57,18 +61,18 @@
                         <a href="{{ route('articles.show', $article->id) }}" class="btn btn-info btn-sm">
                             <img height="20" width="20" src="{{ asset('images/buttons/show.png') }}" alt="Ver detalles" title="Ver detalles">
                         </a>
-                        {{-- @auth --}}
-                            {{-- @if (Auth::user()->can('update', $article)) --}}
+                        @auth
+                            @if (Auth::user()->can('update', $article))
                                 <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-warning btn-sm">
                                     <img height="20" width="20" src="{{ asset('images/buttons/update.png') }}" alt="Modificar" title="Modificar">
                                 </a>
-                            {{-- @endif --}}
-                            {{-- @can('update', $article) --}}
+                            @endif
+                            @can('update', $article)
                                 <a href="{{ route('articles.delete', $article->id) }}" class="btn btn-danger btn-sm">
                                     <img height="20" width="20" src="{{ asset('images/buttons/delete.png') }}" alt="Eliminar" title="Eliminar">
                                 </a>
-                            {{-- @endcan --}}
-                        {{-- @endauth --}}
+                            @endcan
+                        @endauth
                     </td>
                 </tr>
                 @if ($loop->last)

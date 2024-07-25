@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ArticleController extends Controller
 {
+
+
+public function _construct(){
+    $this->middleware('auth')->except('index', 'show','search');
+}
+
+
     /**
      * Display a listing of the resource.
      *
